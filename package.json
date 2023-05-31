@@ -1,0 +1,21 @@
+{
+  "name": "bold-task-playwright",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mikolajnowaczyk/bold-task-playwright.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mikolajnowaczyk/bold-task-playwright/issues"
+  },
+  "homepage": "https://github.com/mikolajnowaczyk/bold-task-playwright#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.34.3"
+  }
+}
