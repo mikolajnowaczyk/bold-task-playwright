@@ -1,31 +1,41 @@
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
+import {LoginPage} from "../pageObjects/loginPage";
+import {SidebarMenu} from "../pageObjects/sidebrMenu";
+import {DocumentsPage} from "../pageObjects/documentsPage";
+import {PricingPlanPage} from "../pageObjects/pricingPlanPage";
+import {PaymentDetailsPage} from "../pageObjects/paymentDetailsPage";
+import {CartErrorPage} from "../pageObjects/cartErrorPage";
+
+import invalidCardDetails from '../fixtures/invalidCardDetails.json'; 
+import loginCredentials from '../fixtures/loginCredentials.json'; 
 
 test.beforeEach(async ({ page, context }) => {
-  await page.goto('https://app.interviewme.pl/login');
-  await context.addCookies([{name:"interviewme-cookie-consent", value: "{%22consent%22:{%22analytics%22:true%2C%22personalization%22:true%2C%22necessary%22:true%2C%22advertising%22:true}%2C%22accepted%22:true%2C%22dateAllowed%22:1685474014331}", url:"https://app.interviewme.pl"}]);
-  //login
-  await page.locator('[data-test="auth-login-email"]').type('LOGIN');
-  await page.locator('[data-test="auth-login-password"]').type('PASSWORD');
-  await page.locator('[data-test="auth-login-submit"]').click();
+  const loginPage = new LoginPage(page, context);
+  await loginPage.load();
+  await loginPage.login(loginCredentials.login, loginCredentials.password);
 })
 
-test('failed payment flow', async ({ page }) => {
+test('Failed payment flow', async ({ page }) => {
+  const sidebarMenu = new SidebarMenu(page);
+  const documents = new DocumentsPage(page);
+  const pricingPlan = new PricingPlanPage(page);
+  const paymentDetails = new PaymentDetailsPage(page);
+  const cartError = new CartErrorPage(page);
   // go to documents
-  await page.locator('[data-test="menu-user-dashboard-documents"]').click();
+  await sidebarMenu.goToDocuments();
   // search document and download
-  await page.locator('[data-test-selector="useradmin-document"]').filter({hasText: "CV - TEST"}).click();
-  await page.locator('[data-test="useradmin-document-download"]').click();
-  // continue
-  await page.locator('[data-test="cart-plan-continue"]').click();
+  await documents.chooseDocument("CV - TEST")
+  await documents.downloadDocument();
+  // choose quarter plan and continue
+  await pricingPlan.chooseQuarterPlan();
+  await pricingPlan.continue();
   // card details
-  await page.frameLocator("#ccframe").locator('[name="ccNum"]').fill("4000 0000 0000 0051");
-  await page.getByPlaceholder('MM/YY').fill("10/23");
-  await page.frameLocator("#ccframe").locator('#ccCVV').fill("123");
-  await page.locator('[name="cardholderName"]').fill("Vincent Testowy");
-  // pay
-  await page.locator('[data-test="cart-pay-securely"]').click();  
-  await expect(page.getByText("Coś poszło nie tak z Twoją płatnością")).toBeVisible();
-  await expect(page.getByText("Twoja płatność nie mogła zostać zrealizowana.")).toBeVisible();
-  await expect(page.getByText("Sprawdź swoje dane do płatności lub spróbuj jeszcze raz inną metodą płatności.")).toBeVisible();
-  await expect(page.getByText("Wróć do metod płatności")).toBeVisible();
+  await paymentDetails.waitForInitialization();
+  await paymentDetails.fillCardDetails(
+    invalidCardDetails.cardNumber.toString(),
+    invalidCardDetails.expiryDate,
+    invalidCardDetails.ccv.toString(),
+    invalidCardDetails.cardHolder);
+  await paymentDetails.clickPay();
+  await cartError.checkError("Coś poszło nie tak z Twoją płatnością", ["Twoja płatność nie mogła zostać zrealizowana.", "Sprawdź swoje dane do płatności lub spróbuj jeszcze raz inną metodą płatności."]);
 });
