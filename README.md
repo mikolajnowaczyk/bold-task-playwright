@@ -5,7 +5,7 @@ Task was to automate failed payment scenario using test credentials and invalid 
 To run scenario clone repo and follow steps:
 
 1. Open terminal, navigate to repo folder and install dependencies with command "npm install"
-2. Change login credentials to valid ones
+2. Modify placeholders to valid credentials in "loginCredentials" json
 3. Run test with command "npx playwright test"
 4. (Optonally) After test open report with "npx playwright show-report". It should look like below:
 
